@@ -1,0 +1,1 @@
+/rbstor/ac.cucinell/miniforge3/envs/nlp_env

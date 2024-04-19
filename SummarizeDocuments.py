@@ -6,7 +6,6 @@ from WordFrequencies import get_word_frequencies_docs
 from GetDocuments import get_documents
 import pickle
 
-# TODO: use vllm 
 # mistralai/Mixtral-8x7B-Instruct-v0.1
 summary_model = "mistralai/Mixtral-8x7B-Instruct-v0.1"
 openai_api_key = "EMPTY"
@@ -36,23 +35,23 @@ def summarize_documents(query, documents):
     prefix = "Provide an overall, aggregate summary of the following documents and discuss the most relevant information to the query"
     prefix += "above the documents is the query used for searching them:\n" + query
     prompt = f"{prefix}:\n\n{documents}\n\n"
+    prompt = json.dumps(prompt)
     message = {
             "role":"user",
-            "content":[prompt]
+            "content":prompt
         }
-    payload = json.dumps(message)
-    response = client.chat.completions.create(
+    try:
+        response = client.chat.completions.create(
                 model="mistralai/Mixtral-8x7B-Instruct-v0.1",
-                messages = [payload],
+                messages = [message],
                 temperature=1.0,
-                max_tokens=1000
+                max_tokens=8000
             )
-    if response['done']:
         print('------Response-------')
         print(response.choices[0].message.content)
         print('------End of Response-------')
-    else:
-        print("Response did not finish generating")
+    except Exception as e:
+        print(f"Error in query: \n{e}")
 
 def load_data(data_file, embedding_file):
     data, embedding = None, None
