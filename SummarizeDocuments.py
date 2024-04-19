@@ -1,4 +1,4 @@
-import ollama
+from openai import OpenAI
 import subprocess
 import json, re
 import sys, os
@@ -7,9 +7,13 @@ from GetDocuments import get_documents
 import pickle
 
 # TODO: use vllm 
-summary_model = "mistral:instruct"
+# mistralai/Mixtral-8x7B-Instruct-v0.1
+summary_model = "mistralai/Mixtral-8x7B-Instruct-v0.1"
+openai_api_key = "EMPTY"
+openai_api_base = "http://rbdgx2.cels.anl.gov:8000/v1"
+client = OpenAI(api_key=openai_api_key, base_url=openai_api_base)
 
-data_dir = "Data/prepared_data/"
+data_dir = "/rbstor/ac.cucinell/LUCID/HypothesisWorkflow/prepared_data"
 
 embedding_dict = {
             "biobert": {
@@ -33,13 +37,19 @@ def summarize_documents(query, documents):
     prefix += "above the documents is the query used for searching them:\n" + query
     prompt = f"{prefix}:\n\n{documents}\n\n"
     message = {
-        "role": "user",
-        "content": prompt
-    }
-    response = ollama.chat(model=summary_model, messages=[message])
+            "role":"user",
+            "content":[prompt]
+        }
+    payload = json.dumps(message)
+    response = client.chat.completions.create(
+                model="mistralai/Mixtral-8x7B-Instruct-v0.1",
+                messages = [payload],
+                temperature=1.0,
+                max_tokens=1000
+            )
     if response['done']:
         print('------Response-------')
-        print(response['message']['content'])
+        print(response.choices[0].message.content)
         print('------End of Response-------')
     else:
         print("Response did not finish generating")
